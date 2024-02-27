@@ -6,6 +6,7 @@ import static com.example.chathere.chatWindow.senderImg;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +20,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -41,10 +47,12 @@ public class messagesAdpter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     String senderRoom;
 
-    public messagesAdpter(Context context, ArrayList<msgModelclass> messagesAdpterArrayList, String senderRoom) {
+    private ClickListener listener;
+    public messagesAdpter(Context context, ArrayList<msgModelclass> messagesAdpterArrayList, String senderRoom,ClickListener listener) {
         this.context = context;
         this.messagesAdpterArrayList = messagesAdpterArrayList;
         this.senderRoom = senderRoom;
+        this.listener = listener;
     }
 
     @NonNull
@@ -88,6 +96,20 @@ public class messagesAdpter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 return false;
             }
         });
+
+        if(holder instanceof  senderViewHolder){
+            ((senderViewHolder) holder).editBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (senderRoom != null) {
+                        listener.onEdit(messages);
+                    } else {
+                        Toast.makeText(context, "Sender room is null", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            });
+        }
 
         if (holder instanceof senderViewHolder) {
             senderViewHolder viewHolder = (senderViewHolder) holder;
@@ -188,16 +210,19 @@ public class messagesAdpter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 .child("chats")
                 .child(senderRoom)
                 .child("messages")
-                .child(message.getMessageId());
+                .child(message.getMessageKey());
 
         // Remove the message from the database
+
+        Log.e("MEES","SS"+message.getSenderid());
+
         messageRef.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     // Message deleted successfully
                     // You can also update the UI if needed
-                    Toast.makeText(context, "Message deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Message deleted "+task.toString(), Toast.LENGTH_LONG).show();
                 } else {
                     // Failed to delete message
                     Toast.makeText(context, "Failed to delete message", Toast.LENGTH_SHORT).show();
@@ -205,6 +230,7 @@ public class messagesAdpter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         });
     }
+
 
     class receiverViewHolder extends RecyclerView.ViewHolder {
         CircleImageView circleImageView;
@@ -220,6 +246,10 @@ public class messagesAdpter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private String getFormattedTime(long timestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
         return sdf.format(new Date(timestamp));
+    }
+
+    public interface ClickListener{
+        void onEdit(msgModelclass message);
     }
 
 

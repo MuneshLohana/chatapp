@@ -1,6 +1,7 @@
 package com.example.chathere;
 
 public class msgModelclass {
+    String messageKey;
     String messageId;
     String message;
     String senderid;
@@ -16,6 +17,9 @@ public class msgModelclass {
         this.timeStamp = timeStamp;
     }
 
+    public void setMessageKey(String messageKey){
+        this.messageKey = messageKey;
+    }
     public String getMessageId() {
         return messageId;
     }
@@ -42,5 +46,9 @@ public class msgModelclass {
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
     }
+
+    public String getMessageKey(){return  messageKey;}
+
+
 
 }
